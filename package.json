@@ -6,6 +6,7 @@
     "ember-addon",
     "ember-cli-deploy-plugin"
   ],
+  "repository": "https://github.com/ember-cli-deploy/ember-cli-deploy-fastboot-app-server-aws",
   "license": "MIT",
   "author": "",
   "directories": {
