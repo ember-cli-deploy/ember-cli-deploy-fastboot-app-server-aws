@@ -1,19 +1,18 @@
 {
   "name": "ember-cli-deploy-fastboot-app-server-aws",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "An ember-cli-deploy plugin to deploy fastboot apps to aws",
   "keywords": [
     "ember-addon",
     "ember-cli-deploy-plugin"
   ],
-  "repository": "https://github.com/ember-cli-deploy/ember-cli-deploy-fastboot-app-server-aws",
+  "repository": "",
   "license": "MIT",
   "author": "",
   "directories": {
     "doc": "doc",
     "test": "tests"
   },
-  "repository": "",
   "scripts": {
     "test": "node tests/runner.js && ./node_modules/.bin/eslint index.js lib/* tests/**/*-test.js"
   },
