@@ -39,7 +39,7 @@ function _list(opts) {
       return new Date(b.LastModified) - new Date(a.LastModified);
     })
     .map((d) => {
-      let match = d.Key.match(/dist-([^.]*)\.zip/);
+      let match = d.Key.match(new RegExp(archivePrefix+'([^.]*)\\.zip'));
       if (!match) {
         return; // ignore files that are no zipped app builds
       }
@@ -64,7 +64,9 @@ module.exports = {
       name: options.name,
 
       defaultConfig: {
-        archivePrefix: 'dist-',
+        archivePrefix: function(context) {
+          return context.fastbootArchivePrefix;
+        },
 
         revisionKey: function(context) {
           let revisionKey = context.revisionData && context.revisionData.revisionKey;
@@ -73,7 +75,7 @@ module.exports = {
 
         downloaderManifestContent: function(context) {
           // setup via ember-cli-deploy-fastboot-app-server plugin
-          return context.downloaderManifestContent;
+          return context.fastbootDownloaderManifestContent;
         },
 
         manifestKey: 'fastboot-deploy-info.json'

@@ -87,6 +87,17 @@ describe('fastboot-app-server-aws plugin', function() {
 
       commandOptions: {},
 
+      fastbootArchivePrefix: 'dist-',
+
+      fastbootDownloaderManifestContent: function(bucket, key) {
+        return `
+          {
+            "bucket": "${bucket}",
+            "key": "${key}"
+          }
+        `;
+      },
+
       config: {
         'fastboot-app-server-aws': {
           bucket: process.env.TEST_BUCKET,
@@ -172,14 +183,6 @@ describe('fastboot-app-server-aws plugin', function() {
     describe('#activate', function() {
       it('takes a manifest file and uploads it to S3', function() {
         this.timeout(5000);
-        context.downloaderManifestContent = function(bucket, key) {
-          return `
-            {
-              "bucket": "${bucket}",
-              "key": "${key}"
-            }
-          `;
-        };
 
         context.commandOptions = {
           revision: '56'

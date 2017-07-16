@@ -76,15 +76,15 @@ The unique revision number for the version of the app. By default this option wi
 
 ### archivePrefix
 
-The prefix that will be used in combination with a revisionkey to build up the identifier for the revision you are deploying.
+The prefix that will be used in combination with a revisionKey to build up the identifier for the revision you are deploying. In the default case this gets added to the deploy context via `ember-cli-deploy-fastboot-app-server`.
 
-*Default:* `dist-`
+*Default:* `context.fastbootArchivePrefix` (added by `ember-cli-deploy-fastboot-app-server`)
 
 ### downloaderManifestContent
 
 A function that gets added to the deploy context so that other plugins can update an app-manifest file that is used by [fastboot-app-server notifiers](https://github.com/ember-fastboot/fastboot-app-server#notifiers) and [-downloaders](https://github.com/ember-fastboot/fastboot-app-server#downloaders) to update the FastBoot-app served via `fastboot-app-server`.
 
-*Default:* `context.downloaderManifestContent` (added by `ember-cli-deploy-fastboot-app-server`)
+*Default:* `context.fastbootDownloaderManifestContent` (added by `ember-cli-deploy-fastboot-app-server`)
 
 ## TL;DR
 
