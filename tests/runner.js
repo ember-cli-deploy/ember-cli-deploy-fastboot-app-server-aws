@@ -5,7 +5,8 @@ var glob = require('glob');
 var Mocha = require('mocha');
 
 var mocha = new Mocha({
-  reporter: 'spec'
+  reporter: 'spec',
+  timeout: 5000
 });
 
 var arg = process.argv[2];
