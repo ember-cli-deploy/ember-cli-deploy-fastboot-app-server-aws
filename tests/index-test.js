@@ -4,7 +4,7 @@
 
 const fs     = require('fs');
 const AWS    = require('aws-sdk');
-const RSVP   = require('RSVP');
+const RSVP   = require('rsvp');
 const assert = require('./helpers/assert');
 const client = new AWS.S3({
   region: process.env.TEST_REGION

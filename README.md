@@ -1,4 +1,4 @@
-# ember-cli-deploy-fastboot-app-server-aws
+# ember-cli-deploy-fastboot-app-server-aws [![CircleCI](https://circleci.com/gh/ember-cli-deploy/ember-cli-deploy-fastboot-app-server-aws.svg?style=svg)](https://circleci.com/gh/ember-cli-deploy/ember-cli-deploy-fastboot-app-server-aws)
 
 > An ember-cli-deploy plugin to deploy Ember FastBoot apps that are deployed via [fastboot-app-server](https://github.com/ember-fastboot/fastboot-app-server) to [AWS](https://aws.amazon.com) (S3)
 
