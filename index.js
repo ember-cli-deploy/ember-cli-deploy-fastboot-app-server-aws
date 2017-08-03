@@ -23,37 +23,50 @@ function _list(opts) {
   let listObjects = RSVP.denodeify(client.listObjects.bind(client));
   let getObject   = RSVP.denodeify(client.getObject.bind(client));
 
-  return RSVP.hash({
-    revisions: listObjects({ Bucket: bucket, Prefix: archivePrefix }),
-    current: getObject({ Bucket: bucket, Key: manifestKey })
-  })
-  .then((result) => {
-    let revisionsData = result.revisions;
-    let current = result.current;
-    let data = revisionsData.Contents;
-    let body = current.Body;
+  let revisionsResults;
 
-    let manifestData = JSON.parse(body);
-
-    let revisions = data.sort(function(a, b) {
-      return new Date(b.LastModified) - new Date(a.LastModified);
+  return listObjects({ Bucket: bucket, Prefix: archivePrefix })
+    .then((results) => {
+      revisionsResults = results;
+      return getObject({ Bucket: bucket, Key: manifestKey });
     })
-    .map((d) => {
-      let match = d.Key.match(new RegExp(archivePrefix+'([^.]*)\\.zip'));
-      if (!match) {
-        return; // ignore files that are no zipped app builds
+    .then((current) => {
+      return { revisions: revisionsResults, current };
+    })
+    .catch(() => {
+      return { revisions: revisionsResults, current: { Body: '{}'} };
+    })
+    .then((result) => {
+      if (result.revisions.length < 1) {
+        return { revisions: [] };
       }
 
-      let revision = match[1];
-      return {
-        revision,
-        timestamp: d.LastModified,
-        active: d.Key === manifestData.key
-      }
-    }).filter((d) => d); // filter out empty values
+      let revisionsData = result.revisions;
+      let current = result.current;
+      let data = revisionsData.Contents;
+      let body = current.Body;
 
-    return { revisions };
-  });
+      let manifestData = JSON.parse(body);
+
+      let revisions = data.sort(function(a, b) {
+        return new Date(b.LastModified) - new Date(a.LastModified);
+      })
+      .map((d) => {
+        let match = d.Key.match(new RegExp(archivePrefix+'([^.]*)\\.zip'));
+        if (!match) {
+          return; // ignore files that are no zipped app builds
+        }
+
+        let revision = match[1];
+        return {
+          revision,
+          timestamp: d.LastModified,
+          active: d.Key === manifestData.key
+        }
+      }).filter((d) => d); // filter out empty values
+
+      return { revisions };
+    });
 }
 
 module.exports = {
@@ -143,7 +156,7 @@ module.exports = {
       fetchRevisions: function() {
         let accessKeyId     = this.readConfig('accessKeyId');
         let secretAccessKey = this.readConfig('secretAccessKey');
-        let archivePrefix          = this.readConfig('archivePrefix');
+        let archivePrefix   = this.readConfig('archivePrefix');
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');

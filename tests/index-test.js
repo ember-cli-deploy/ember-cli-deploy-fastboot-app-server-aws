@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* global afterEach */
 'use strict';
 
 const fs     = require('fs');
@@ -14,24 +15,25 @@ const del  = RSVP.denodeify(client.deleteObjects.bind(client));
 const put  = RSVP.denodeify(client.putObject.bind(client));
 const all  = RSVP.all;
 
-function setupTestData() {
-  function cleanBucket() {
-    return list({ Bucket: process.env.TEST_BUCKET })
-      .then((data) => data.Contents.map((d) => { return { Key: d.Key }; }))
-      .then((objects) => {
-        if (!objects.length) {
-          return;
+
+function cleanBucket() {
+  return list({ Bucket: process.env.TEST_BUCKET })
+    .then((data) => data.Contents.map((d) => { return { Key: d.Key }; }))
+    .then((objects) => {
+      if (!objects.length) {
+        return;
+      }
+
+      return del({
+        Bucket: process.env.TEST_BUCKET,
+        Delete: {
+          Objects: objects
         }
-
-        return del({
-          Bucket: process.env.TEST_BUCKET,
-          Delete: {
-            Objects: objects
-          }
-        });
       });
-  }
+    });
+}
 
+function setupTestData() {
   function addTestData() {
     let existingDists = ['dist-12.zip', 'dist-34.zip', 'dist-56.zip'];
     let promises = existingDists.map((n) => {
@@ -133,8 +135,6 @@ describe('fastboot-app-server-aws plugin', function() {
       });
 
       it('uploads whatever is in `context.fastbootArchivePath` to S3', function() {
-        this.timeout(5000);
-
         let FILE_NAME = 'dist-78.zip';
         let CONTENT   = 'testtest';
 
@@ -158,7 +158,6 @@ describe('fastboot-app-server-aws plugin', function() {
 
     describe('#fetchRevisions', function() {
       it('returns a list of available revisions and the current active one', function() {
-        this.timeout(5000);
         return plugin.fetchRevisions(context)
           .then((data) => {
             let revisions = data.revisions.map((d) => d.revision);
@@ -166,11 +165,21 @@ describe('fastboot-app-server-aws plugin', function() {
             assert.isTrue(data.revisions[1].active, 'revision 34 marked current');
           });
       });
+
+      it('does not fail when bucket is empty', function() {
+        return cleanBucket()
+          .then(() => {
+            return plugin.fetchRevisions(context);
+          })
+          .then((data) => {
+            let revisions = data.revisions.map((d) => d.revision);
+            assert.deepEqual(revisions, []);
+          });
+      });
     });
 
     describe('#fetchInitialRevisions', function() {
       it('returns a list of available revisions and the current active one', function() {
-        this.timeout(5000);
         return plugin.fetchInitialRevisions(context)
           .then((data) => {
             let revisions = data.initialRevisions.map((d) => d.revision);
@@ -178,12 +187,21 @@ describe('fastboot-app-server-aws plugin', function() {
             assert.isTrue(data.initialRevisions[1].active, 'revision 34 marked current');
           });
       });
+
+      it('does not fail when bucket is empty', function() {
+        return cleanBucket()
+          .then(() => {
+            return plugin.fetchInitialRevisions(context);
+          })
+          .then((data) => {
+            let revisions = data.initialRevisions.map((d) => d.revision);
+            assert.deepEqual(revisions, []);
+          });
+      });
     });
 
     describe('#activate', function() {
       it('takes a manifest file and uploads it to S3', function() {
-        this.timeout(5000);
-
         context.commandOptions = {
           revision: '56'
         };
