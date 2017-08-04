@@ -34,5 +34,56 @@ jobs:
         
       # run tests!
       - run: yarn test
+  deploy:
+    docker:
+      - image: circleci/node:4.8.4
 
+    working_directory: ~/repo
 
+    steps:
+      - checkout
+      - run: mkdir ~/ember-test-app
+      - run:
+          command: |
+            git clone https://github.com/LevelbossMike/fastboot-app.git ~/ember-test-app
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - app-v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - app-v1-dependencies-
+
+      - run: 
+          working_directory: ~/ember-test-app
+          command: yarn install
+
+      - save_cache:
+          paths:
+            - ~/ember-test-app/node_modules
+          key: app-v1-dependencies-{{ checksum "package.json" }}
+        
+      # install current ember-cli-deploy-fastboot-app-server release to check compatability
+      - run: 
+          working_directory: ~/ember-test-app
+          command: ./node_modules/ember-cli/bin/ember install ember-cli-deploy-fastboot-app-server
+      # install plugin version that we checked out in the previous step
+      - run: 
+          working_directory: ~/ember-test-app
+          command: ./node_modules/ember-cli/bin/ember install file:../repo
+
+      # create unique index.hbs
+      - run:
+          working_directory: ~/ember-test-app
+          command: echo "<h1 data-test-sha>${CIRCLE_BUILD_NUM}</h1>" > app/templates/index.hbs
+      - run: 
+          working_directory: ~/ember-test-app
+          command: ./node_modules/ember-cli/bin/ember deploy production --activate
+
+workflows:
+  version: 2
+  build-deploy-test-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
