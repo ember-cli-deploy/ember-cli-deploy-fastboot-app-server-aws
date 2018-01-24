@@ -52,7 +52,7 @@ function _list(opts) {
         return new Date(b.LastModified) - new Date(a.LastModified);
       })
       .map((d) => {
-        let match = d.Key.match(new RegExp(archivePrefix+'([^.]*)\\.zip'));
+        let match = d.Key.match(new RegExp(archivePrefix+'(.*)\\.zip'));
         if (!match) {
           return; // ignore files that are no zipped app builds
         }
