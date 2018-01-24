@@ -91,7 +91,8 @@ module.exports = {
           return context.fastbootDownloaderManifestContent;
         },
 
-        manifestKey: 'fastboot-deploy-info.json'
+        manifestKey: 'fastboot-deploy-info.json',
+        awsPrefix: ''
       },
 
       requiredConfig: ['bucket', 'region'],
@@ -100,16 +101,24 @@ module.exports = {
         let revisionKey   = this.readConfig('revisionKey');
         let bucket        = this.readConfig('bucket');
         let archivePrefix = this.readConfig('archivePrefix');
+        let awsPrefix     = this.readConfig('awsPrefix');
         // update manifest-file to point to passed revision
         let downloaderManifestContent = this.readConfig('downloaderManifestContent');
 
-        let manifest        = downloaderManifestContent(bucket, `${archivePrefix}${revisionKey}.zip`);
+        let buildKey        = `${archivePrefix}${revisionKey}.zip`;
+        if (awsPrefix) {
+          buildKey = `${awsPrefix}/${buildKey}`;
+        }
+
+        let manifest        = downloaderManifestContent(bucket, buildKey);
         let AWS             = require('aws-sdk');
         let RSVP            = require('rsvp');
         let accessKeyId     = this.readConfig('accessKeyId');
         let secretAccessKey = this.readConfig('secretAccessKey');
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');
+
+        manifestKey = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let client = new AWS.S3({
           accessKeyId,
@@ -135,6 +144,7 @@ module.exports = {
         let secretAccessKey = this.readConfig('secretAccessKey');
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
+        let awsPrefix       = this.readConfig('awsPrefix');
 
         let client = new AWS.S3({
           accessKeyId,
@@ -146,10 +156,12 @@ module.exports = {
 
         let data = fs.readFileSync(context.fastbootArchivePath);
 
+        let key = awsPrefix ? `${awsPrefix}/${context.fastbootArchiveName}` : context.fastbootArchiveName;
+
         return putObject({
           Bucket: bucket,
           Body: data,
-          Key: context.fastbootArchiveName
+          Key: key
         });
       },
 
@@ -160,6 +172,10 @@ module.exports = {
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');
+        let awsPrefix       = this.readConfig('awsPrefix');
+
+        archivePrefix = awsPrefix ? `${awsPrefix}/${archivePrefix}` : archivePrefix;
+        manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
@@ -175,6 +191,10 @@ module.exports = {
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');
+        let awsPrefix       = this.readConfig('awsPrefix');
+
+        archivePrefix = awsPrefix ? `${awsPrefix}/${archivePrefix}` : archivePrefix;
+        manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
