@@ -110,6 +110,7 @@ module.exports = {
           buildKey = `${awsPrefix}/${buildKey}`;
         }
 
+        this.log(`creating manifest for bucket: ${bucket} and buildKey: ${buildKey}`, {verbose: true});
         let manifest        = downloaderManifestContent(bucket, buildKey);
         let AWS             = require('aws-sdk');
         let RSVP            = require('rsvp');
@@ -126,6 +127,8 @@ module.exports = {
           region
         });
         let putObject = RSVP.denodeify(client.putObject.bind(client));
+
+        this.log(`updating manifest at ${manifestKey}`, {verbose: true});
 
         return putObject({
           Bucket: bucket,
@@ -158,6 +161,7 @@ module.exports = {
 
         let key = awsPrefix ? `${awsPrefix}/${context.fastbootArchiveName}` : context.fastbootArchiveName;
 
+        this.log(`uploading fastboot archive to ${bucket}/${key}`, {verbose: true});
         return putObject({
           Bucket: bucket,
           Body: data,
@@ -181,7 +185,13 @@ module.exports = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
         };
 
-        return _list(opts);
+        return _list(opts)
+          .then(({ revisions }) => {
+            revisions.forEach(r => {
+              this.log(`${r.revision} | ${r.timestamp} | active: ${r.active}`, {verbose: true});
+          });
+          return { revisions };
+        });
       },
 
       fetchInitialRevisions: function() {
@@ -200,9 +210,13 @@ module.exports = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
         };
 
-        return _list(opts)
-          .then((data) => {
-            return { initialRevisions: data.revisions };
+        return _list(opts, this)
+          .then(({ revisions }) =>  {
+            revisions.forEach(r => {
+              this.log(`${r.revision} | ${r.timestamp} | active: ${r.active}`, {verbose: true});
+            });
+
+            return { initialRevisions: revisions };
           });
       }
     });
