@@ -194,6 +194,19 @@ describe('fastboot-app-server-aws plugin', function() {
           });
       });
 
+      it('respects `awsPrefix` when looking for revisions', function() {
+        let PREFIX = 'blog';
+        return setupTestData({ awsPrefix: PREFIX }).then(() => {
+          context.config['fastboot-app-server-aws'].awsPrefix = PREFIX;
+          return plugin.fetchRevisions(context)
+            .then((data) => {
+              let revisions = data.revisions.map((d) => d.revision);
+              assert.deepEqual(revisions, ['12', '34', '56']);
+              assert.isTrue(data.revisions[1].active, 'revision 34 marked current');
+            });
+        })
+      });
+
       it('does not fail when bucket is empty', function() {
         return cleanBucket()
           .then(() => {
@@ -214,6 +227,19 @@ describe('fastboot-app-server-aws plugin', function() {
             assert.deepEqual(revisions, ['12', '34', '56']);
             assert.isTrue(data.initialRevisions[1].active, 'revision 34 marked current');
           });
+      });
+
+      it('respects `awsPrefix` when fetching initial revisions', function() {
+        let PREFIX = 'blog';
+        return setupTestData({ awsPrefix: PREFIX }).then(() => {
+          context.config['fastboot-app-server-aws'].awsPrefix = PREFIX;
+          return plugin.fetchInitialRevisions(context)
+            .then((data) => {
+              let revisions = data.initialRevisions.map((d) => d.revision);
+              assert.deepEqual(revisions, ['12', '34', '56']);
+              assert.isTrue(data.initialRevisions[1].active, 'revision 34 marked current');
+            });
+        })
       });
 
       it('does not fail when bucket is empty', function() {
