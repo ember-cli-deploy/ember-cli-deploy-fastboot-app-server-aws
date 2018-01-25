@@ -52,7 +52,7 @@ function _list(opts) {
         return new Date(b.LastModified) - new Date(a.LastModified);
       })
       .map((d) => {
-        let match = d.Key.match(new RegExp(archivePrefix+'([^.]*)\\.zip'));
+        let match = d.Key.match(new RegExp(archivePrefix+'(.*)\\.zip'));
         if (!match) {
           return; // ignore files that are no zipped app builds
         }
@@ -91,7 +91,8 @@ module.exports = {
           return context.fastbootDownloaderManifestContent;
         },
 
-        manifestKey: 'fastboot-deploy-info.json'
+        manifestKey: 'fastboot-deploy-info.json',
+        awsPrefix: ''
       },
 
       requiredConfig: ['bucket', 'region'],
@@ -100,10 +101,17 @@ module.exports = {
         let revisionKey   = this.readConfig('revisionKey');
         let bucket        = this.readConfig('bucket');
         let archivePrefix = this.readConfig('archivePrefix');
+        let awsPrefix     = this.readConfig('awsPrefix');
         // update manifest-file to point to passed revision
         let downloaderManifestContent = this.readConfig('downloaderManifestContent');
 
-        let manifest        = downloaderManifestContent(bucket, `${archivePrefix}${revisionKey}.zip`);
+        let buildKey        = `${archivePrefix}${revisionKey}.zip`;
+        if (awsPrefix) {
+          buildKey = `${awsPrefix}/${buildKey}`;
+        }
+
+        this.log(`creating manifest for bucket: ${bucket} and buildKey: ${buildKey}`, {verbose: true});
+        let manifest        = downloaderManifestContent(bucket, buildKey);
         let AWS             = require('aws-sdk');
         let RSVP            = require('rsvp');
         let accessKeyId     = this.readConfig('accessKeyId');
@@ -111,12 +119,16 @@ module.exports = {
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');
 
+        manifestKey = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
+
         let client = new AWS.S3({
           accessKeyId,
           secretAccessKey,
           region
         });
         let putObject = RSVP.denodeify(client.putObject.bind(client));
+
+        this.log(`updating manifest at ${manifestKey}`, {verbose: true});
 
         return putObject({
           Bucket: bucket,
@@ -135,6 +147,7 @@ module.exports = {
         let secretAccessKey = this.readConfig('secretAccessKey');
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
+        let awsPrefix       = this.readConfig('awsPrefix');
 
         let client = new AWS.S3({
           accessKeyId,
@@ -146,10 +159,13 @@ module.exports = {
 
         let data = fs.readFileSync(context.fastbootArchivePath);
 
+        let key = awsPrefix ? `${awsPrefix}/${context.fastbootArchiveName}` : context.fastbootArchiveName;
+
+        this.log(`uploading fastboot archive to ${bucket}/${key}`, {verbose: true});
         return putObject({
           Bucket: bucket,
           Body: data,
-          Key: context.fastbootArchiveName
+          Key: key
         });
       },
 
@@ -160,12 +176,22 @@ module.exports = {
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');
+        let awsPrefix       = this.readConfig('awsPrefix');
+
+        archivePrefix = awsPrefix ? `${awsPrefix}/${archivePrefix}` : archivePrefix;
+        manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
         };
 
-        return _list(opts);
+        return _list(opts)
+          .then(({ revisions }) => {
+            revisions.forEach(r => {
+              this.log(`${r.revision} | ${r.timestamp} | active: ${r.active}`, {verbose: true});
+          });
+          return { revisions };
+        });
       },
 
       fetchInitialRevisions: function() {
@@ -175,14 +201,22 @@ module.exports = {
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
         let manifestKey     = this.readConfig('manifestKey');
+        let awsPrefix       = this.readConfig('awsPrefix');
+
+        archivePrefix = awsPrefix ? `${awsPrefix}/${archivePrefix}` : archivePrefix;
+        manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
         };
 
-        return _list(opts)
-          .then((data) => {
-            return { initialRevisions: data.revisions };
+        return _list(opts, this)
+          .then(({ revisions }) =>  {
+            revisions.forEach(r => {
+              this.log(`${r.revision} | ${r.timestamp} | active: ${r.active}`, {verbose: true});
+            });
+
+            return { initialRevisions: revisions };
           });
       }
     });

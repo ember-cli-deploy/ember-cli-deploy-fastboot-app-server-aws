@@ -68,6 +68,19 @@ The region your bucket is located in. (e.g. set this to `eu-west-1` if your buck
 
 *Default:* `undefined`
 
+### awsPrefix
+
+A optional prefix to add to the uploaded destination of your built fastboot assets. Useful if your app is hosted at a nested path on S3. For example if you set `awsPrefix` to `'blog'`, `fastboot-deploy-info.json` will look something like this:
+```json
+{
+  "bucket": "my-bucket",
+  "key": "blog/dist-0.0.0+a3323e2.zip"
+}
+```
+**Note** that a trailing slash is added to the value to separate it from the `archivePrefix` value.
+
+*Default:* `''`
+
 ### revisionKey
 
 The unique revision number for the version of the app. By default this option will use either the `revision` passed in from the command line or the `revisionData.revisionKey` property from the deployment context.
