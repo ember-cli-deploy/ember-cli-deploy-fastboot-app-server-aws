@@ -77,6 +77,7 @@ A optional prefix to add to the uploaded destination of your built fastboot asse
   "key": "blog/dist-0.0.0+a3323e2.zip"
 }
 ```
+**Note** that a trailing slash is added to the value to separate it from the `archivePrefix` value.
 
 *Default:* `''`
 
