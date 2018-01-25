@@ -154,6 +154,31 @@ describe('fastboot-app-server-aws plugin', function() {
             assert.isTrue(false, 'upload failed');
           });
       });
+
+      it('uploads objects to a nested path if `awsPrefix` is set', function() {
+        let FILE_NAME = 'dist-78.zip';
+        let CONTENT   = 'testtest';
+        let PREFIX    = 'blog';
+        let KEY       = `${PREFIX}/${FILE_NAME}`;
+
+        fs.writeFileSync(FILE_NAME, CONTENT);
+
+        context.fastbootArchivePath = FILE_NAME;
+        context.fastbootArchiveName = FILE_NAME;
+
+        context.config['fastboot-app-server-aws'].awsPrefix = PREFIX;
+
+        return plugin.upload(context)
+          .then(() => {
+            return get({ Bucket: process.env.TEST_BUCKET, Key: KEY });
+          })
+          .then((data) => {
+            assert.equal(data.Body, CONTENT, 'file was uploaded correctly');
+          })
+          .catch(() => {
+            assert.isTrue(false, 'upload failed');
+          });
+      });
     });
 
     describe('#fetchRevisions', function() {
@@ -217,6 +242,35 @@ describe('fastboot-app-server-aws plugin', function() {
             let expected = {
               bucket: process.env.TEST_BUCKET,
               key: 'dist-56.zip'
+            };
+            let actual = JSON.parse(data.Body.toString());
+
+            assert.deepEqual(actual, expected, 'manifest file updated as expected');
+          })
+          .catch(() => {
+            assert.isTrue(false, "can't find manifest-file");
+          });
+      });
+
+      it('uploads the manifest with a key prefix if `awsPrefix` is set', function() {
+        let PREFIX = 'blog';
+
+        context.commandOptions = {
+          revision: '56'
+        };
+        context.config['fastboot-app-server-aws'].awsPrefix = PREFIX;
+
+        return plugin.activate(context)
+          .then(() => {
+            return get({
+              Bucket: process.env.TEST_BUCKET,
+              Key: `${PREFIX}/fastboot-deploy-info.json`
+            });
+          })
+          .then((data) => {
+            let expected = {
+              bucket: process.env.TEST_BUCKET,
+              key: `${PREFIX}/dist-56.zip`
             };
             let actual = JSON.parse(data.Body.toString());
 
