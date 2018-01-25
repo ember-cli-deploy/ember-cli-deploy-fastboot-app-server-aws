@@ -33,18 +33,21 @@ function cleanBucket() {
     });
 }
 
-function setupTestData() {
+function setupTestData(ops = {}) {
   function addTestData() {
     let existingDists = ['dist-12.zip', 'dist-34.zip', 'dist-56.zip'];
     let promises = existingDists.map((n) => {
+      if (ops.awsPrefix) {
+        n = `${ops.awsPrefix}/${n}`;
+      }
       return put({ Bucket: process.env.TEST_BUCKET, Key: n, Body: 'Body: ' + n });
     });
     promises.push(put({
       Bucket: process.env.TEST_BUCKET,
-      Key: 'fastboot-deploy-info.json',
+      Key: (ops.awsPrefix ? `${ops.awsPrefix}/` : '') + 'fastboot-deploy-info.json',
       Body: JSON.stringify({
         bucket: process.env.TEST_BUCKET,
-        key: 'dist-34.zip'
+        key: (ops.awsPrefix ? `${ops.awsPrefix}/` : '') + 'dist-34.zip'
       })
     }));
 
