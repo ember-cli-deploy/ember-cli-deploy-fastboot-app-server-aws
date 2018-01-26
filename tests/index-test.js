@@ -33,7 +33,8 @@ function cleanBucket() {
     });
 }
 
-function setupTestData(ops = {}) {
+function setupTestData(options) {
+  let ops = options || {};
   function addTestData() {
     let existingDists = ['dist-12.zip', 'dist-34.zip', 'dist-56.zip'];
     let promises = existingDists.map((n) => {
