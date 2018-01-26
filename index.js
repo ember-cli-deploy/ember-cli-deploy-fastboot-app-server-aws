@@ -186,7 +186,8 @@ module.exports = {
         };
 
         return _list(opts)
-          .then(({ revisions }) => {
+          .then((data) => {
+            let revisions = data.revisions;
             revisions.forEach(r => {
               this.log(`${r.revision} | ${r.timestamp} | active: ${r.active}`, {verbose: true});
           });
@@ -211,7 +212,8 @@ module.exports = {
         };
 
         return _list(opts, this)
-          .then(({ revisions }) =>  {
+          .then((data) =>  {
+            let revisions = data.revisions;
             revisions.forEach(r => {
               this.log(`${r.revision} | ${r.timestamp} | active: ${r.active}`, {verbose: true});
             });
