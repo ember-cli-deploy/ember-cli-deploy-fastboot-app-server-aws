@@ -165,6 +165,9 @@ The following properties are expected to be present on the deployment `context` 
 - `commandLineArgs.revisionKey` (provided by [ember-cli-deploy][5])
 - `deployEnvironment`           (provided by [ember-cli-deploy][5])
 
+## S3 Permissions
+In addition to the same permissions you need to have for uploading files via the  [ember-cli-deploy-s3 plugin](https://github.com/ember-cli-deploy/ember-cli-deploy-s3#deployment-user-and-s3-permissions) you also need permission for the `listBucket` and `listObject` actions for S3. Usually the easiest thing to do when using this plugin is to create a user that has admin-access to the bucket you chose to use for uploading your deployments to.
+
 ## Running Tests
 You need to have a bucket on S3 setup for the test to complete. Tests expect
 specific environment variables to be set so that tests are able to upload to
