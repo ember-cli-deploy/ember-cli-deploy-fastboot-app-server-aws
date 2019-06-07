@@ -56,6 +56,11 @@ The AWS secret for the user that has the ability to upload to the `bucket`. This
 
 *Default:* `undefined`
 
+### profile
+The AWS profile as defined in ~/.aws/credentials. If this is left undefined, the normal AWS SDK credential resolution will take place.
+
+*Default:* `undefined`
+
 ### bucket (`required`)
 
 The AWS bucket that the files will be uploaded to.
