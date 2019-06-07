@@ -12,6 +12,7 @@ function _list(opts) {
   let archivePrefix   = opts.archivePrefix;
   let bucket          = opts.bucket;
   let region          = opts.region;
+  let profile         = opts.profile;
   let manifestKey     = opts.manifestKey
 
   let client = new AWS.S3({
@@ -19,6 +20,12 @@ function _list(opts) {
     secretAccessKey,
     region
   });
+
+  if (profile) {
+    AWS.config.credentials = new AWS.SharedIniFileCredentials({
+      profile: profile
+    });
+  }
 
   let listObjects = RSVP.denodeify(client.listObjects.bind(client));
   let getObject   = RSVP.denodeify(client.getObject.bind(client));
@@ -201,6 +208,7 @@ module.exports = {
         let archivePrefix   = this.readConfig('archivePrefix');
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
+        let profile         = this.readConfig('profile');
         let manifestKey     = this.readConfig('manifestKey');
         let awsPrefix       = this.readConfig('awsPrefix');
 
@@ -208,7 +216,7 @@ module.exports = {
         manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
-          accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
+          accessKeyId, secretAccessKey, archivePrefix, bucket, region, profile, manifestKey
         };
 
         return _list(opts, this)
