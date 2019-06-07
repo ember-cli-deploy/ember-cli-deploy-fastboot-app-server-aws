@@ -1,6 +1,6 @@
 {
   "name": "ember-cli-deploy-fastboot-app-server-aws",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An ember-cli-deploy plugin to deploy fastboot apps to aws",
   "keywords": [
     "ember-addon",
