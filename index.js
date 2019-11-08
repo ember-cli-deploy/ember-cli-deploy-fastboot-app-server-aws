@@ -15,17 +15,17 @@ function _list(opts) {
   let profile         = opts.profile;
   let manifestKey     = opts.manifestKey
 
-  let client = new AWS.S3({
-    accessKeyId,
-    secretAccessKey,
-    region
-  });
-
   if (profile) {
     AWS.config.credentials = new AWS.SharedIniFileCredentials({
       profile: profile
     });
   }
+
+  let client = new AWS.S3({
+    accessKeyId,
+    secretAccessKey,
+    region
+  });
 
   let listObjects = RSVP.denodeify(client.listObjects.bind(client));
   let getObject   = RSVP.denodeify(client.getObject.bind(client));
