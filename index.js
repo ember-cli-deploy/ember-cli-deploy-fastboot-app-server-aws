@@ -15,17 +15,18 @@ function _list(opts) {
   let profile         = opts.profile;
   let manifestKey     = opts.manifestKey
 
+  if (profile) {
+    console.log('using profile: ' + profile);
+    AWS.config.credentials = new AWS.SharedIniFileCredentials({
+      profile: profile
+    });
+  }
+
   let client = new AWS.S3({
     accessKeyId,
     secretAccessKey,
     region
   });
-
-  if (profile) {
-    AWS.config.credentials = new AWS.SharedIniFileCredentials({
-      profile: profile
-    });
-  }
 
   let listObjects = RSVP.denodeify(client.listObjects.bind(client));
   let getObject   = RSVP.denodeify(client.getObject.bind(client));
@@ -40,11 +41,12 @@ function _list(opts) {
     .then((current) => {
       return { revisions: revisionsResults, current };
     })
-    .catch(() => {
+    .catch((error) => {
+      console.error('failed to get revisions: ' + error);
       return { revisions: revisionsResults, current: { Body: '{}'} };
     })
     .then((result) => {
-      if (result.revisions.length < 1) {
+      if (!result.revisions || result.revisions.length < 1) {
         return { revisions: [] };
       }
 
@@ -182,6 +184,7 @@ module.exports = {
         let archivePrefix   = this.readConfig('archivePrefix');
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
+        let profile         = this.readConfig('profile');
         let manifestKey     = this.readConfig('manifestKey');
         let awsPrefix       = this.readConfig('awsPrefix');
 
@@ -189,7 +192,7 @@ module.exports = {
         manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
-          accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
+          accessKeyId, secretAccessKey, archivePrefix, bucket, region, profile, manifestKey
         };
 
         return _list(opts)
@@ -219,7 +222,7 @@ module.exports = {
           accessKeyId, secretAccessKey, archivePrefix, bucket, region, profile, manifestKey
         };
 
-        return _list(opts, this)
+        return _list(opts)
           .then((data) =>  {
             let revisions = data.revisions;
             revisions.forEach(r => {
