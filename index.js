@@ -44,7 +44,7 @@ function _list(opts) {
       return { revisions: revisionsResults, current: { Body: '{}'} };
     })
     .then((result) => {
-      if (result.revisions.length < 1) {
+      if (!result.revisions || result.revisions.length < 1) {
         return { revisions: [] };
       }
 
@@ -182,6 +182,7 @@ module.exports = {
         let archivePrefix   = this.readConfig('archivePrefix');
         let bucket          = this.readConfig('bucket');
         let region          = this.readConfig('region');
+        let profile         = this.readConfig('profile');
         let manifestKey     = this.readConfig('manifestKey');
         let awsPrefix       = this.readConfig('awsPrefix');
 
@@ -189,7 +190,7 @@ module.exports = {
         manifestKey   = awsPrefix ? `${awsPrefix}/${manifestKey}` : manifestKey;
 
         let opts = {
-          accessKeyId, secretAccessKey, archivePrefix, bucket, region, manifestKey
+          accessKeyId, secretAccessKey, archivePrefix, bucket, region, profile, manifestKey
         };
 
         return _list(opts)
